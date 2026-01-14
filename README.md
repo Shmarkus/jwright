@@ -195,6 +195,7 @@ jwright follows a modular architecture with clear stability tiers:
 | `jwright-java` | Java language support | EXTENSION |
 | `jwright-ollama` | Ollama LLM provider | EXTENSION |
 | `jwright-maven` | Maven build tool integration | EXTENSION |
+| `jwright-gradle` | Gradle build tool integration | EXTENSION |
 | `jwright-cli` | Command-line interface | INTERNAL |
 
 For detailed architecture documentation, see [CLAUDE.md](CLAUDE.md) and the `.claude/systems/` directory.

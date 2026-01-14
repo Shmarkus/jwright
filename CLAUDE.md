@@ -45,6 +45,7 @@ mvn clean install -DskipTests
 - **jwright-java/** - Java language support (extractors, writers)
 - **jwright-ollama/** - Ollama LLM provider
 - **jwright-maven/** - Maven build tool
+- **jwright-gradle/** - Gradle build tool
 - **jwright-cli/** - CLI commands: `init`, `implement`, `watch`
 - **jwright-bom/** - Bill of Materials
 

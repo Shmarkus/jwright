@@ -33,6 +33,7 @@
         <module>jwright-java</module>
         <module>jwright-ollama</module>
         <module>jwright-maven</module>
+        <module>jwright-gradle</module>
         <module>jwright-cli</module>
     </modules>
 
