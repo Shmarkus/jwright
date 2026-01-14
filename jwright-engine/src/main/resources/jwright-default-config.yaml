@@ -1,0 +1,51 @@
+# jwright default configuration
+# This file contains sensible defaults for using jwright with Ollama
+
+jwright:
+  # LLM Provider Configuration
+  llm:
+    provider: ollama
+    ollama:
+      # Default Ollama server URL (local installation)
+      url: http://localhost:11434
+      # Recommended model for code generation
+      # qwen2.5-coder provides excellent code generation with reasonable resource usage
+      model: qwen2.5-coder:14b
+      # Generation timeout (2 minutes default)
+      timeout: 120s
+
+  # Task Configuration
+  tasks:
+    implement:
+      # Implementation task timeout
+      timeout: 120s
+      # Number of retries on failure
+      max-retries: 5
+    refactor:
+      # Enable refactoring after successful implementation
+      enabled: true
+      # Refactor timeout
+      timeout: 60s
+      # Refactor retries
+      max-retries: 2
+
+  # Watch Mode Configuration
+  watch:
+    # Directories to monitor for changes
+    paths:
+      - src/test/java
+    # Patterns to ignore
+    ignore:
+      - "**/*.class"
+      - "**/target/**"
+      - "**/build/**"
+      - "**/.jwright/**"
+    # Debounce delay after file changes
+    debounce: 500ms
+
+  # Project Path Configuration
+  paths:
+    # Source code directory
+    source: src/main/java
+    # Test code directory
+    test: src/test/java

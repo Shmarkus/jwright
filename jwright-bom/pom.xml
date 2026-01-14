@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>ee.jwright</groupId>
+        <artifactId>jwright-parent</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>jwright-bom</artifactId>
+    <packaging>pom</packaging>
+
+    <name>jwright-bom</name>
+    <description>Bill of Materials for jwright - version management for all modules</description>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- jwright modules -->
+            <dependency>
+                <groupId>ee.jwright</groupId>
+                <artifactId>jwright-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ee.jwright</groupId>
+                <artifactId>jwright-engine</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ee.jwright</groupId>
+                <artifactId>jwright-java</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ee.jwright</groupId>
+                <artifactId>jwright-ollama</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ee.jwright</groupId>
+                <artifactId>jwright-maven</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ee.jwright</groupId>
+                <artifactId>jwright-cli</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- External dependencies version management -->
+            <dependency>
+                <groupId>com.github.javaparser</groupId>
+                <artifactId>javaparser-core</artifactId>
+                <version>3.25.8</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.spullara.mustache.java</groupId>
+                <artifactId>compiler</artifactId>
+                <version>0.9.11</version>
+            </dependency>
+            <dependency>
+                <groupId>info.picocli</groupId>
+                <artifactId>picocli</artifactId>
+                <version>4.7.5</version>
+            </dependency>
+            <dependency>
+                <groupId>info.picocli</groupId>
+                <artifactId>picocli-spring-boot-starter</artifactId>
+                <version>4.7.5</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+</project>

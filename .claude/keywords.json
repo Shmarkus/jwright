@@ -1,0 +1,168 @@
+{
+  "keywords": {
+    ".claude/systems/core-api.md": [
+      "JwrightCore",
+      "Task interface",
+      "ContextExtractor",
+      "CodeWriter",
+      "LlmClient",
+      "BuildTool",
+      "TemplateEngine",
+      "stable contract",
+      "STABLE",
+      "frozen interface",
+      "ExtractionContext",
+      "ExtractionRequest",
+      "WriteRequest",
+      "WriteMode",
+      "PipelineResult",
+      "TaskResult",
+      "TaskStatus",
+      "WatchCallback",
+      "WatchHandle",
+      "ee.jwright.core"
+    ],
+    ".claude/systems/engine.md": [
+      "TaskPipeline",
+      "PipelineState",
+      "BackupManager",
+      "ContextBuilder",
+      "DefaultJwrightCore",
+      "pipeline execution",
+      "orchestration",
+      "revert",
+      "snapshot",
+      "retry",
+      "task order",
+      "INTERNAL",
+      "MustacheTemplateEngine",
+      "template resolution",
+      "ee.jwright.engine"
+    ],
+    ".claude/systems/java-support.md": [
+      "JavaTestMethodExtractor",
+      "JavaAssertionExtractor",
+      "JavaMockitoExtractor",
+      "JavaHintExtractor",
+      "JavaTypeDefinitionExtractor",
+      "JavaMethodBodyWriter",
+      "JavaParser",
+      "Java extractor",
+      "Java writer",
+      "JUnit",
+      "AssertJ",
+      "Mockito",
+      "@JwrightHint",
+      "jwright-java",
+      "ee.jwright.java",
+      ".java file"
+    ],
+    ".claude/systems/llm-providers.md": [
+      "OllamaClient",
+      "ClaudeClient",
+      "LLM provider",
+      "Ollama",
+      "language model",
+      "generate",
+      "LlmException",
+      "jwright.llm.provider",
+      "qwen2.5-coder",
+      "codellama",
+      "API key",
+      "jwright-ollama",
+      "jwright-claude",
+      "ee.jwright.ollama",
+      "localhost:11434",
+      "model"
+    ],
+    ".claude/systems/build-tools.md": [
+      "MavenBuildTool",
+      "GradleBuildTool",
+      "Maven",
+      "Gradle",
+      "compile",
+      "mvn test",
+      "gradle test",
+      "CompilationResult",
+      "CompilationError",
+      "TestResult",
+      "TestFailure",
+      "pom.xml",
+      "build.gradle",
+      "jwright-maven",
+      "jwright-gradle",
+      "ee.jwright.maven",
+      "ee.jwright.gradle",
+      "mvnw",
+      "gradlew"
+    ],
+    ".claude/systems/cli.md": [
+      "jwright init",
+      "jwright implement",
+      "jwright watch",
+      "CLI",
+      "command line",
+      "JwrightCli",
+      "InitCommand",
+      "ImplementCommand",
+      "WatchCommand",
+      "--dry-run",
+      "--verbose",
+      "--quiet",
+      "--no-refactor",
+      "jwright-cli",
+      "ee.jwright.cli",
+      "exit code"
+    ],
+    ".claude/IMPLEMENTATION_PLAN.md": [
+      "implementation plan",
+      "phase",
+      "task",
+      "roadmap",
+      "next step",
+      "what to implement",
+      "implementation order",
+      "TDD",
+      "test first",
+      "artifact",
+      "milestone",
+      "checklist",
+      "Phase 1",
+      "Phase 2",
+      "Phase 3",
+      "Phase 4",
+      "Phase 5",
+      "Phase 6",
+      "Phase 7",
+      "Phase 8",
+      "Phase 9"
+    ]
+  },
+  "co_activation": {
+    ".claude/systems/core-api.md": [
+      ".claude/systems/engine.md"
+    ],
+    ".claude/systems/engine.md": [
+      ".claude/systems/core-api.md",
+      ".claude/systems/llm-providers.md",
+      ".claude/systems/build-tools.md"
+    ],
+    ".claude/systems/java-support.md": [
+      ".claude/systems/core-api.md"
+    ],
+    ".claude/systems/llm-providers.md": [
+      ".claude/systems/engine.md",
+      ".claude/systems/core-api.md"
+    ],
+    ".claude/systems/build-tools.md": [
+      ".claude/systems/engine.md",
+      ".claude/systems/core-api.md"
+    ],
+    ".claude/systems/cli.md": [
+      ".claude/systems/core-api.md"
+    ]
+  },
+  "pinned": [
+    "CLAUDE.md"
+  ]
+}

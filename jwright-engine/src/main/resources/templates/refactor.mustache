@@ -1,0 +1,86 @@
+You are a Java code refactoring assistant. Your task is to improve the code while keeping tests passing.
+
+## Current Implementation
+
+The following code was generated and passes all tests:
+
+```java
+{{generatedCode}}
+```
+
+## Method Signature
+
+```java
+{{targetReturnType}} {{targetMethodName}}({{targetParameters}})
+```
+
+## Test Context
+
+**Test Class:** {{testClassName}}
+**Test Method:** {{testMethodName}}
+
+### Test Method Body
+```java
+{{testMethodBody}}
+```
+
+{{#hasTypeDefinitions}}
+## Available Types and Fields
+
+These types and their fields are available in the current class:
+
+{{#typeDefinitions}}
+### {{name}}
+{{#fields}}
+- `{{type}} {{name}}`
+{{/fields}}
+{{#methods}}
+- `{{signature}}`
+{{/methods}}
+{{/typeDefinitions}}
+{{/hasTypeDefinitions}}
+
+{{#hasAvailableMethods}}
+## Available Methods
+
+{{#availableMethods}}
+### {{typeName}}
+{{#methods}}
+- `{{signature}}`
+{{/methods}}
+{{/availableMethods}}
+{{/hasAvailableMethods}}
+
+{{#hasHints}}
+## Developer Hints
+
+{{#hints}}
+- {{.}}
+{{/hints}}
+{{/hasHints}}
+
+## Refactoring Guidelines
+
+Please refactor the code to improve:
+
+1. **Readability** - Use clear variable names and simplify expressions
+2. **Maintainability** - Reduce complexity and follow clean code principles
+3. **Efficiency** - Optimize performance where it doesn't harm readability
+4. **Best Practices** - Follow Java conventions and idioms
+
+## Important Constraints
+
+- **DO NOT** change the behavior or functionality
+- **ALL TESTS MUST PASS** with the refactored code
+- Keep the same method signature
+- Only improve the implementation
+- **ONLY USE** types, fields, and methods shown above - do not introduce new imports or dependencies
+- Use standard Java language features only (no streams unless already used)
+
+## Response Format
+
+Return ONLY the refactored method body (no method signature, no class wrapper):
+
+```java
+// Your refactored implementation here
+```

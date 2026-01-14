@@ -1,0 +1,279 @@
+# jwright
+
+AI-assisted Test-Driven Development tool using local language models.
+
+**Core Principle:** "Don't make the model use tools. Make tools wrap the model."
+
+jwright generates implementation code from failing tests, keeping you in control of the TDD cycle while leveraging AI for the mechanical work of writing code.
+
+## Features
+
+- **Privacy-first**: Uses local LLMs via Ollama - your code never leaves your machine
+- **Atomic TDD**: One test, one implementation - maintains TDD discipline
+- **Human oversight**: Review and approve all generated code
+- **Smart context**: Extracts test assertions, mocks, type definitions to guide generation
+- **Auto-refactoring**: Optional code improvement pass after implementation
+- **Watch mode**: Continuous TDD - implement as you write tests
+
+## Prerequisites
+
+- **Java 21** or later
+- **Maven 3.8+**
+- **Ollama** with a code model installed:
+  ```bash
+  # Install Ollama from https://ollama.ai
+  ollama pull qwen2.5-coder:14b
+  ```
+
+## Installation
+
+```bash
+# Clone the repository
+git clone <repository-url>
+cd jwright
+
+# Build the project
+mvn clean install
+
+# The CLI JAR is at: jwright-cli/target/jwright-cli-1.0.0-SNAPSHOT.jar
+```
+
+## Quick Start
+
+### 1. Initialize your project
+
+```bash
+cd your-java-project
+java -jar /path/to/jwright-cli-1.0.0-SNAPSHOT.jar init
+```
+
+This creates `.jwright/config.yaml` with default settings.
+
+### 2. Write a failing test
+
+```java
+// src/test/java/com/example/CalculatorTest.java
+@Test
+void add_returnsSumOfTwoNumbers() {
+    Calculator calc = new Calculator();
+    int result = calc.add(2, 3);
+    assertThat(result).isEqualTo(5);
+}
+```
+
+### 3. Generate the implementation
+
+```bash
+java -jar /path/to/jwright-cli-1.0.0-SNAPSHOT.jar implement \
+  "com.example.CalculatorTest#add_returnsSumOfTwoNumbers" \
+  -d /path/to/your-project
+```
+
+jwright will:
+1. Parse your test to understand what's expected
+2. Generate implementation code using the LLM
+3. Write the code to your implementation file
+4. Compile and run the test to verify it passes
+5. Optionally refactor the code
+
+### 4. Watch mode (continuous TDD)
+
+```bash
+java -jar /path/to/jwright-cli-1.0.0-SNAPSHOT.jar watch -d /path/to/your-project
+```
+
+jwright watches for test file changes and automatically implements new tests.
+
+## Commands
+
+### `jwright init`
+
+Initialize jwright configuration in your project.
+
+```bash
+jwright init [-d <project-dir>]
+```
+
+Creates `.jwright/config.yaml` and `.jwright/templates/` directory.
+
+### `jwright implement`
+
+Generate implementation for a specific test method.
+
+```bash
+jwright implement <TestClass#testMethod> [options]
+
+Options:
+  -d, --directory    Project directory (default: current directory)
+  --dry-run          Show what would be done without making changes
+  --verbose          Enable verbose output
+  --no-refactor      Skip the refactoring pass
+```
+
+Example:
+```bash
+jwright implement "org.example.GameTest#addPlayer_addsPlayer" -d ~/projects/my-game
+```
+
+### `jwright watch`
+
+Watch for test changes and implement automatically.
+
+```bash
+jwright watch [options]
+
+Options:
+  -d, --directory    Project directory (default: current directory)
+  --verbose          Enable verbose output
+```
+
+## Configuration
+
+Configuration is stored in `.jwright/config.yaml`:
+
+```yaml
+jwright:
+  llm:
+    provider: ollama
+    ollama:
+      url: http://localhost:11434
+      model: qwen2.5-coder:14b
+      timeout: 120s
+
+  tasks:
+    implement:
+      timeout: 120s
+      max-retries: 5
+    refactor:
+      enabled: true
+      timeout: 60s
+      max-retries: 2
+
+  watch:
+    paths:
+      - src/test/java
+    ignore:
+      - "**/*.class"
+      - "**/target/**"
+    debounce: 500ms
+
+  paths:
+    source: src/main/java
+    test: src/test/java
+```
+
+### Configuration Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `llm.provider` | LLM provider to use | `ollama` |
+| `llm.ollama.url` | Ollama server URL | `http://localhost:11434` |
+| `llm.ollama.model` | Model to use for generation | `qwen2.5-coder:14b` |
+| `tasks.implement.max-retries` | Max retry attempts on failure | `5` |
+| `tasks.refactor.enabled` | Enable auto-refactoring | `true` |
+| `watch.debounce` | Debounce time for file changes | `500ms` |
+
+## How It Works
+
+1. **Test Parsing**: Extracts test method body, assertions, mock setups, and type information
+2. **Context Building**: Gathers implementation class fields, available methods, and hints
+3. **Prompt Generation**: Renders a structured prompt using Mustache templates
+4. **LLM Generation**: Sends prompt to local Ollama instance
+5. **Code Injection**: Writes generated code into the target method
+6. **Validation**: Compiles and runs the test to verify correctness
+7. **Retry Loop**: On failure, includes error context and retries (up to max-retries)
+8. **Refactoring**: Optionally improves the code while keeping tests green
+
+## Architecture
+
+jwright follows a modular architecture with clear stability tiers:
+
+| Module | Purpose | Stability |
+|--------|---------|-----------|
+| `jwright-core` | Stable interfaces and contracts | STABLE |
+| `jwright-engine` | Pipeline orchestration | INTERNAL |
+| `jwright-java` | Java language support | EXTENSION |
+| `jwright-ollama` | Ollama LLM provider | EXTENSION |
+| `jwright-maven` | Maven build tool integration | EXTENSION |
+| `jwright-cli` | Command-line interface | INTERNAL |
+
+For detailed architecture documentation, see [CLAUDE.md](CLAUDE.md) and the `.claude/systems/` directory.
+
+## Customization
+
+### Custom Templates
+
+Override the default prompts by creating templates in `.jwright/templates/`:
+
+- `implement.mustache` - Implementation generation prompt
+- `refactor.mustache` - Refactoring prompt
+
+### Adding Hints
+
+Use the `@JwrightHint` annotation to guide generation:
+
+```java
+@Test
+@JwrightHint("Use recursion for factorial calculation")
+void factorial_calculatesCorrectly() {
+    // ...
+}
+```
+
+## Troubleshooting
+
+### Ollama not running
+
+```
+Error: Connection refused to localhost:11434
+```
+
+Start Ollama:
+```bash
+ollama serve
+```
+
+### Model not found
+
+```
+Error: model 'qwen2.5-coder:14b' not found
+```
+
+Pull the model:
+```bash
+ollama pull qwen2.5-coder:14b
+```
+
+### Compilation failures after generation
+
+The generated code may have compilation errors. jwright will automatically retry with the error context. If retries are exhausted, check:
+
+1. Does the implementation class exist with the correct method signature?
+2. Are all required imports available?
+3. Is the test correctly structured?
+
+### Test failures after generation
+
+If generated code compiles but tests fail, jwright will retry with test failure information. Ensure your test assertions are clear and unambiguous.
+
+## Contributing
+
+See [CLAUDE.md](CLAUDE.md) for development guidelines and architecture documentation.
+
+Key points:
+- Never modify STABLE interfaces in `jwright-core`
+- Add new functionality via new classes with `@Component` and `@Order`
+- Follow the extractor and task ordering conventions
+
+## License
+
+[Add your license here]
+
+## Acknowledgments
+
+Built with:
+- [Ollama](https://ollama.ai) - Local LLM runtime
+- [JavaParser](https://javaparser.org) - Java AST parsing
+- [Mustache](https://github.com/spullara/mustache.java) - Template engine
+- [Picocli](https://picocli.info) - CLI framework
+- [Spring Boot](https://spring.io/projects/spring-boot) - Dependency injection

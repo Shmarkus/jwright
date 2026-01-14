@@ -1,0 +1,119 @@
+You are a Java code generation assistant. Your task is to implement a method body that will make a failing test pass.
+
+## Test Information
+
+**Test Class:** {{testClassName}}
+**Test Method:** {{testMethodName}}
+
+### Test Method Body
+```java
+{{testMethodBody}}
+```
+
+## Target Method Signature
+
+```java
+{{targetReturnType}} {{targetMethodName}}({{targetParameters}})
+```
+
+{{#hasAssertions}}
+## Assertions to Satisfy
+
+{{#assertions}}
+- **{{type}}**: expected={{expected}}, actual={{actual}}
+{{/assertions}}
+{{/hasAssertions}}
+
+{{#hasMockSetups}}
+## Mock Setups (Behavior to Expect)
+
+{{#mockSetups}}
+- `{{mockObject}}.{{methodCall}}` returns `{{returnValue}}`
+{{/mockSetups}}
+{{/hasMockSetups}}
+
+{{#hasVerifyStatements}}
+## Verify Statements (Methods to Call)
+
+{{#verifyStatements}}
+- `{{mockObject}}.{{methodCall}}` should be called{{#times}} {{times}} time(s){{/times}}
+{{/verifyStatements}}
+{{/hasVerifyStatements}}
+
+{{#hasTypeDefinitions}}
+## Type Definitions
+
+{{#typeDefinitions}}
+### {{name}}
+Fields:
+{{#fields}}
+- `{{type}} {{name}}`
+{{/fields}}
+{{/typeDefinitions}}
+{{/hasTypeDefinitions}}
+
+{{#hasAvailableMethods}}
+## Available Methods
+
+{{#availableMethods}}
+### {{typeName}}
+{{#methods}}
+- `{{signature}}`
+{{/methods}}
+{{/availableMethods}}
+{{/hasAvailableMethods}}
+
+{{#hasHints}}
+## Developer Hints
+
+{{#hints}}
+- {{.}}
+{{/hints}}
+{{/hasHints}}
+
+{{#hasCurrentImplementation}}
+## Current Implementation (Not Working)
+
+```java
+{{currentImplementation}}
+```
+
+This implementation is not passing the test. Please fix it.
+{{/hasCurrentImplementation}}
+
+{{#hasFailedAttempts}}
+## Previous Failed Attempts
+
+{{#failedAttempts}}
+### Attempt {{attemptNumber}}
+**Code:**
+```java
+{{generatedCode}}
+```
+
+**Error:** {{errorMessage}}
+{{#compilationErrors}}
+- Line {{line}}: {{message}}
+{{/compilationErrors}}
+{{#testFailures}}
+- {{testName}}: {{message}}
+{{/testFailures}}
+
+{{/failedAttempts}}
+{{/hasFailedAttempts}}
+
+## Instructions
+
+1. Analyze the test to understand what the method should do
+2. Write ONLY the method body implementation (no method signature, no class wrapper)
+3. The code must compile and pass the test
+4. Use the mock setups and verify statements to understand expected interactions
+5. Return clean, readable code
+
+## Response Format
+
+Return ONLY the implementation code (method body only, no wrapping):
+
+```java
+// Your implementation here
+```

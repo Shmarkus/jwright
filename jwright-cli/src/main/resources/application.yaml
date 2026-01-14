@@ -1,0 +1,5 @@
+# jwright CLI application configuration
+spring:
+  main:
+    web-application-type: none
+    banner-mode: off
