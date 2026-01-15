@@ -2,5 +2,5 @@
 spring:
   main:
     web-application-type: none
-    banner-mode: off
+    banner-mode: console
     lazy-initialization: true
