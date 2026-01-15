@@ -95,7 +95,7 @@ class DefaultConfigurationTest {
                 String model = (String) ollama.get("model");
                 assertThat(model)
                     .isNotNull()
-                    .contains("coder"); // Should be a code-focused model
+                    .isEqualTo("cogito:8b-8k"); // Best performing model per benchmarks
             }
         }
 
