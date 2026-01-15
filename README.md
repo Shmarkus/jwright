@@ -22,8 +22,20 @@ jwright generates implementation code from failing tests, keeping you in control
 - **Ollama** with a code model installed:
   ```bash
   # Install Ollama from https://ollama.ai
-  ollama pull qwen2.5-coder:14b
+  ollama pull cogito:8b-8k   # Recommended - best performance
   ```
+
+### Model Selection
+
+jwright works with any Ollama model, but performance varies significantly. Our [benchmark testing](MODEL_BENCHMARKS.md) found:
+
+| Model | Size | Recommendation |
+|-------|------|----------------|
+| **cogito:8b-8k** | 4.9 GB | Best overall - handles complex logic |
+| qwen2.5-coder:14b | 9.0 GB | Good for standard TDD tasks |
+| phi4-mini:latest | 2.5 GB | Budget option for simple methods |
+
+See [MODEL_BENCHMARKS.md](MODEL_BENCHMARKS.md) for detailed performance analysis across 11 models.
 
 ## Installation
 
@@ -82,7 +94,21 @@ jwright will:
 java -jar /path/to/jwright-cli-1.0.0-SNAPSHOT.jar watch -d /path/to/your-project
 ```
 
-jwright watches for test file changes and automatically implements new tests.
+jwright watches for test file changes and automatically implements failing tests in real-time.
+
+**What it does:**
+- Monitors test directories for changes
+- Detects when test files are modified or created
+- Identifies failing tests automatically
+- Runs the implementation pipeline for each failing test
+- Continues watching until you stop it (Ctrl+C)
+
+**Example workflow:**
+1. Start watch mode in your project
+2. Write or modify a test
+3. Save the file
+4. jwright detects the change, finds failing tests, and generates implementations
+5. See results immediately in your terminal
 
 ## Commands
 
@@ -117,7 +143,7 @@ jwright implement "org.example.GameTest#addPlayer_addsPlayer" -d ~/projects/my-g
 
 ### `jwright watch`
 
-Watch for test changes and implement automatically.
+Watch for test changes and implement automatically (continuous TDD mode).
 
 ```bash
 jwright watch [options]
@@ -125,6 +151,24 @@ jwright watch [options]
 Options:
   -d, --directory    Project directory (default: current directory)
   --verbose          Enable verbose output
+```
+
+**How it works:**
+1. Monitors test paths defined in `.jwright/config.yaml`
+2. Debounces file changes (500ms default) to avoid duplicate processing
+3. Automatically detects failing tests when files change
+4. Runs implementation for each failing test
+5. Reports results in real-time
+6. Continues until interrupted with Ctrl+C
+
+**Example output:**
+```
+[WATCH] Monitoring: src/test/java
+[WATCH] Detected change: src/test/java/com/example/CalculatorTest.java
+[WATCH] Found failing test: CalculatorTest#add_returnsSumOfTwoNumbers
+[IMPLEMENT] Generating implementation...
+[SUCCESS] Implementation completed in 2.3s
+[WATCH] Waiting for changes...
 ```
 
 ## Configuration
