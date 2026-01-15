@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# jwright - AI-assisted TDD tool
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+JAR="$SCRIPT_DIR/jwright-cli/target/jwright-cli-1.1.0-SNAPSHOT.jar"
+
+if [[ ! -f "$JAR" ]]; then
+    echo "Error: JAR not found. Run 'mvn clean install' first." >&2
+    exit 1
+fi
+
+exec java -jar "$JAR" "$@"
