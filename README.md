@@ -65,8 +65,11 @@ cd jwright
 # Build the project
 mvn clean install
 
-# The CLI JAR is at: jwright-cli/target/jwright-cli-1.1.0-SNAPSHOT.jar
+# Optional: Add to PATH for global access
+ln -s "$(pwd)/jwright" ~/.local/bin/jwright
 ```
+
+The `jwright` wrapper script in the repo root handles JAR discovery automatically.
 
 ## Quick Start
 
@@ -74,7 +77,9 @@ mvn clean install
 
 ```bash
 cd your-java-project
-java -jar /path/to/jwright-cli-1.1.0-SNAPSHOT.jar init
+/path/to/jwright init
+# Or if added to PATH:
+jwright init
 ```
 
 This creates `.jwright/config.yaml` with default settings.
@@ -94,9 +99,7 @@ void add_returnsSumOfTwoNumbers() {
 ### 3. Generate the implementation
 
 ```bash
-java -jar /path/to/jwright-cli-1.1.0-SNAPSHOT.jar implement \
-  "com.example.CalculatorTest#add_returnsSumOfTwoNumbers" \
-  -d /path/to/your-project
+jwright implement "com.example.CalculatorTest#add_returnsSumOfTwoNumbers"
 ```
 
 jwright will:
@@ -109,7 +112,7 @@ jwright will:
 ### 4. Watch mode (continuous TDD)
 
 ```bash
-java -jar /path/to/jwright-cli-1.1.0-SNAPSHOT.jar watch -d /path/to/your-project
+jwright watch
 ```
 
 jwright watches for test file changes and automatically implements failing tests in real-time.
