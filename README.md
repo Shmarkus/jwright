@@ -22,8 +22,26 @@ jwright generates implementation code from failing tests, keeping you in control
 - **Ollama** with a code model installed:
   ```bash
   # Install Ollama from https://ollama.ai
-  ollama pull cogito:8b-8k   # Recommended - best performance
+  ollama pull cogito:8b
   ```
+
+### Setting Up cogito:8b-8k (Recommended)
+
+The default `cogito:8b` model uses a 2k context window. For best results with jwright, create an 8k context variant:
+
+```bash
+# Start an Ollama chat session
+ollama run cogito:8b
+
+# In the chat, set the context size and save as new model
+/set parameter num_ctx 8192
+/save cogito:8b-8k
+
+# Exit with Ctrl+D, then verify
+ollama list | grep cogito:8b-8k
+```
+
+This 8k context version dramatically improves code generation for complex logic. See [MODEL_BENCHMARKS.md](MODEL_BENCHMARKS.md) for benchmark results showing cogito:8b-8k achieving 12/12 tests while the standard 2k version only achieves 1/12.
 
 ### Model Selection
 
@@ -47,7 +65,7 @@ cd jwright
 # Build the project
 mvn clean install
 
-# The CLI JAR is at: jwright-cli/target/jwright-cli-1.0.0-SNAPSHOT.jar
+# The CLI JAR is at: jwright-cli/target/jwright-cli-1.1.0-SNAPSHOT.jar
 ```
 
 ## Quick Start
@@ -56,7 +74,7 @@ mvn clean install
 
 ```bash
 cd your-java-project
-java -jar /path/to/jwright-cli-1.0.0-SNAPSHOT.jar init
+java -jar /path/to/jwright-cli-1.1.0-SNAPSHOT.jar init
 ```
 
 This creates `.jwright/config.yaml` with default settings.
@@ -76,7 +94,7 @@ void add_returnsSumOfTwoNumbers() {
 ### 3. Generate the implementation
 
 ```bash
-java -jar /path/to/jwright-cli-1.0.0-SNAPSHOT.jar implement \
+java -jar /path/to/jwright-cli-1.1.0-SNAPSHOT.jar implement \
   "com.example.CalculatorTest#add_returnsSumOfTwoNumbers" \
   -d /path/to/your-project
 ```
@@ -91,7 +109,7 @@ jwright will:
 ### 4. Watch mode (continuous TDD)
 
 ```bash
-java -jar /path/to/jwright-cli-1.0.0-SNAPSHOT.jar watch -d /path/to/your-project
+java -jar /path/to/jwright-cli-1.1.0-SNAPSHOT.jar watch -d /path/to/your-project
 ```
 
 jwright watches for test file changes and automatically implements failing tests in real-time.
@@ -181,7 +199,7 @@ jwright:
     provider: ollama
     ollama:
       url: http://localhost:11434
-      model: qwen2.5-coder:14b
+      model: cogito:8b-8k
       timeout: 120s
 
   tasks:
@@ -212,7 +230,7 @@ jwright:
 |--------|-------------|---------|
 | `llm.provider` | LLM provider to use | `ollama` |
 | `llm.ollama.url` | Ollama server URL | `http://localhost:11434` |
-| `llm.ollama.model` | Model to use for generation | `qwen2.5-coder:14b` |
+| `llm.ollama.model` | Model to use for generation | `cogito:8b-8k` |
 | `tasks.implement.max-retries` | Max retry attempts on failure | `5` |
 | `tasks.refactor.enabled` | Enable auto-refactoring | `true` |
 | `watch.debounce` | Debounce time for file changes | `500ms` |
@@ -312,7 +330,7 @@ Key points:
 
 ## License
 
-[Add your license here]
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 ## Acknowledgments
 

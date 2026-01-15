@@ -17,7 +17,7 @@ import java.time.Duration;
  *   llm:
  *     ollama:
  *       url: http://localhost:11434
- *       model: qwen2.5-coder:14b
+ *       model: cogito:8b-8k
  *       timeout: 120s
  * </pre>
  *
@@ -34,9 +34,9 @@ public class OllamaConfig {
 
     /**
      * The model to use for code generation.
-     * <p>Default: {@code qwen2.5-coder:14b}</p>
+     * <p>Default: {@code cogito:8b-8k}</p>
      */
-    private String model = "qwen2.5-coder:14b";
+    private String model = "cogito:8b-8k";
 
     /**
      * The timeout for LLM requests.

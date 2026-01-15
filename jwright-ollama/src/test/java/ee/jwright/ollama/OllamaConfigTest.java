@@ -29,10 +29,10 @@ class OllamaConfigTest {
         }
 
         @Test
-        @DisplayName("model defaults to qwen2.5-coder:14b")
-        void modelDefaultsToQwen() {
+        @DisplayName("model defaults to cogito:8b-8k")
+        void modelDefaultsToCogito() {
             OllamaConfig config = new OllamaConfig();
-            assertThat(config.getModel()).isEqualTo("qwen2.5-coder:14b");
+            assertThat(config.getModel()).isEqualTo("cogito:8b-8k");
         }
 
         @Test

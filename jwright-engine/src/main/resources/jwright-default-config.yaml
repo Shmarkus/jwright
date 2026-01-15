@@ -9,8 +9,8 @@ jwright:
       # Default Ollama server URL (local installation)
       url: http://localhost:11434
       # Recommended model for code generation
-      # qwen2.5-coder provides excellent code generation with reasonable resource usage
-      model: qwen2.5-coder:14b
+      # cogito:8b-8k provides the best code generation with 8k context window
+      model: cogito:8b-8k
       # Generation timeout (2 minutes default)
       timeout: 120s
 
