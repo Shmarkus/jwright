@@ -11,6 +11,7 @@ import ee.jwright.core.task.TaskStatus;
 import ee.jwright.engine.context.ContextBuilder;
 import ee.jwright.engine.pipeline.BackupManager;
 import ee.jwright.engine.pipeline.TaskPipeline;
+import ee.jwright.engine.resolve.BuildToolResolver;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -24,6 +25,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -220,9 +222,13 @@ class DefaultJwrightCoreTest {
         void watchReturnsRunningHandle(@TempDir Path tempDir) throws JwrightException {
             // Given
             BuildTool buildTool = mock(BuildTool.class);
+            when(buildTool.getId()).thenReturn("mock");
             when(buildTool.runTests(anyString())).thenReturn(
                 new TestResult(true, 1, 0, List.of())
             );
+
+            BuildToolResolver buildToolResolver = mock(BuildToolResolver.class);
+            when(buildToolResolver.resolve(any())).thenReturn(buildTool);
 
             DefaultJwrightCore core = new DefaultJwrightCore(
                 new ContextBuilder(Collections.emptyList()),
@@ -231,7 +237,7 @@ class DefaultJwrightCoreTest {
                 null,
                 null,
                 null,
-                buildTool
+                buildToolResolver
             );
 
             WatchRequest request = new WatchRequest(

@@ -16,6 +16,7 @@ import ee.jwright.core.write.CodeWriter;
 import ee.jwright.engine.context.ContextBuilder;
 import ee.jwright.engine.pipeline.BackupManager;
 import ee.jwright.engine.pipeline.TaskPipeline;
+import ee.jwright.engine.resolve.BuildToolResolver;
 import ee.jwright.engine.resolve.TestTargetResolver;
 import ee.jwright.engine.watch.WatchSession;
 import org.slf4j.Logger;
@@ -85,7 +86,7 @@ public class DefaultJwrightCore implements JwrightCore {
     private final TemplateEngine templateEngine;
     private final LlmClient llmClient;
     private final CodeWriter codeWriter;
-    private final BuildTool buildTool;
+    private final BuildToolResolver buildToolResolver;
 
     @Value("${jwright.tasks.implement.max-retries:5}")
     private int maxRetries = 5;
@@ -93,12 +94,12 @@ public class DefaultJwrightCore implements JwrightCore {
     /**
      * Creates a new DefaultJwrightCore with the given components.
      *
-     * @param contextBuilder the context builder
-     * @param tasks          the list of tasks to execute
-     * @param templateEngine the template engine (optional, for lazy initialization)
-     * @param llmClient      the LLM client (optional, for lazy initialization)
-     * @param codeWriter     the code writer (optional, for lazy initialization)
-     * @param buildTool      the build tool (optional, for lazy initialization)
+     * @param contextBuilder    the context builder
+     * @param tasks             the list of tasks to execute
+     * @param templateEngine    the template engine (optional, for lazy initialization)
+     * @param llmClient         the LLM client (optional, for lazy initialization)
+     * @param codeWriter        the code writer (optional, for lazy initialization)
+     * @param buildToolResolver the build tool resolver (optional, for lazy initialization)
      */
     @Autowired
     public DefaultJwrightCore(
@@ -107,13 +108,13 @@ public class DefaultJwrightCore implements JwrightCore {
             @Autowired(required = false) TemplateEngine templateEngine,
             @Autowired(required = false) LlmClient llmClient,
             @Autowired(required = false) CodeWriter codeWriter,
-            @Autowired(required = false) BuildTool buildTool) {
+            @Autowired(required = false) BuildToolResolver buildToolResolver) {
         this.contextBuilder = contextBuilder;
         this.tasks = tasks;
         this.templateEngine = templateEngine;
         this.llmClient = llmClient;
         this.codeWriter = codeWriter;
-        this.buildTool = buildTool;
+        this.buildToolResolver = buildToolResolver;
     }
 
     /**
@@ -130,30 +131,30 @@ public class DefaultJwrightCore implements JwrightCore {
         this.templateEngine = null;
         this.llmClient = null;
         this.codeWriter = null;
-        this.buildTool = null;
+        this.buildToolResolver = null;
         this.maxRetries = maxRetries;
     }
 
     /**
      * Creates a new DefaultJwrightCore with all dependencies for testing.
      *
-     * @param contextBuilder the context builder
-     * @param tasks          the list of tasks to execute
-     * @param maxRetries     maximum retry attempts for required tasks
-     * @param templateEngine the template engine
-     * @param llmClient      the LLM client
-     * @param codeWriter     the code writer
-     * @param buildTool      the build tool
+     * @param contextBuilder    the context builder
+     * @param tasks             the list of tasks to execute
+     * @param maxRetries        maximum retry attempts for required tasks
+     * @param templateEngine    the template engine
+     * @param llmClient         the LLM client
+     * @param codeWriter        the code writer
+     * @param buildToolResolver the build tool resolver
      */
     public DefaultJwrightCore(ContextBuilder contextBuilder, List<Task> tasks, int maxRetries,
                              TemplateEngine templateEngine, LlmClient llmClient,
-                             CodeWriter codeWriter, BuildTool buildTool) {
+                             CodeWriter codeWriter, BuildToolResolver buildToolResolver) {
         this.contextBuilder = contextBuilder;
         this.tasks = tasks;
         this.templateEngine = templateEngine;
         this.llmClient = llmClient;
         this.codeWriter = codeWriter;
-        this.buildTool = buildTool;
+        this.buildToolResolver = buildToolResolver;
         this.maxRetries = maxRetries;
     }
 
@@ -193,18 +194,23 @@ public class DefaultJwrightCore implements JwrightCore {
         log.info("Implementing: {}", request.target());
 
         // Resolve target to get implementation file path
-        TestTargetResolver resolver = new TestTargetResolver();
-        TestTargetResolver.ResolvedTarget resolved = resolver.resolve(
+        TestTargetResolver targetResolver = new TestTargetResolver();
+        TestTargetResolver.ResolvedTarget resolved = targetResolver.resolve(
             request.projectDir(),
             request.target()
         );
         Path implFile = resolved.implFile();
 
+        // Resolve build tool for this project
+        BuildTool buildTool = buildToolResolver != null
+            ? buildToolResolver.resolve(request.projectDir())
+            : null;
+
         // Create pipeline with fresh backup manager for this execution
         BackupManager backupManager = new BackupManager();
         TaskPipeline pipeline = new TaskPipeline(
             tasks, contextBuilder, backupManager, maxRetries, implFile,
-            request.projectDir(), templateEngine, llmClient, codeWriter, buildTool, resolver
+            request.projectDir(), templateEngine, llmClient, codeWriter, buildTool, targetResolver
         );
 
         return pipeline.execute(request);
@@ -214,13 +220,17 @@ public class DefaultJwrightCore implements JwrightCore {
     public WatchHandle watch(WatchRequest request, WatchCallback callback) throws JwrightException {
         log.info("Starting watch mode for: {}", request.projectDir());
 
-        // Validate build tool is available
-        if (buildTool == null) {
+        // Validate build tool resolver is available
+        if (buildToolResolver == null) {
             throw new JwrightException(
                 JwrightException.ErrorCode.CONFIG_INVALID,
-                "Build tool not configured. Cannot run watch mode."
+                "Build tool resolver not configured. Cannot run watch mode."
             );
         }
+
+        // Resolve build tool for this project
+        BuildTool buildTool = buildToolResolver.resolve(request.projectDir());
+        log.info("Using build tool: {} for project: {}", buildTool.getId(), request.projectDir());
 
         // Create and start watch session
         WatchSession session = new WatchSession(request, buildTool, callback);

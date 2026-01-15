@@ -19,6 +19,7 @@ import ee.jwright.core.write.CodeWriter;
 import ee.jwright.engine.DefaultJwrightCore;
 import ee.jwright.engine.context.ContextBuilder;
 import ee.jwright.engine.pipeline.PipelineState;
+import ee.jwright.engine.resolve.BuildToolResolver;
 import ee.jwright.engine.task.ImplementTask;
 import ee.jwright.engine.template.MustacheResolver;
 import ee.jwright.engine.template.MustacheTemplateEngine;
@@ -230,7 +231,7 @@ class EndToEndMockTest {
                 templateEngine,
                 mockLlm,
                 codeWriter,
-                mockBuildTool
+                new BuildToolResolver(List.of(mockBuildTool))
             );
 
             ImplementRequest request = new ImplementRequest(

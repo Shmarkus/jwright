@@ -38,6 +38,11 @@
             <artifactId>jwright-maven</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>ee.jwright</groupId>
+            <artifactId>jwright-gradle</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <!-- Spring Boot -->
         <dependency>

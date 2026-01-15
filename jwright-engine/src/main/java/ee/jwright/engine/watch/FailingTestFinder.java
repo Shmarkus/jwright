@@ -6,6 +6,7 @@ import ee.jwright.core.build.TestResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,9 +40,20 @@ public class FailingTestFinder {
      * @return list of failing test targets in format "TestClass#testMethod"
      */
     public List<String> findFailingTests(Path testFile, String testClass) {
-        log.debug("Running tests in: {}", testClass);
+        log.debug("Finding failing tests in: {}", testClass);
+
+        // Find project directory and compile to set up build tool
+        Path projectDir = findProjectDir(testFile);
+        if (projectDir == null) {
+            log.error("Could not find project directory for test file: {}", testFile);
+            return List.of();
+        }
+
+        log.debug("Found project directory: {}", projectDir);
+        buildTool.compile(projectDir);
 
         TestResult result = buildTool.runTests(testClass);
+        log.debug("Test result: passed={}, failed={}", result.passed(), result.failed());
 
         List<String> failingTests = new ArrayList<>();
         if (!result.success()) {
@@ -53,5 +65,22 @@ public class FailingTestFinder {
         }
 
         return failingTests;
+    }
+
+    /**
+     * Finds the project directory by walking up from the test file.
+     * Looks for pom.xml (Maven) or build.gradle/build.gradle.kts (Gradle).
+     */
+    private Path findProjectDir(Path testFile) {
+        Path current = testFile.getParent();
+        while (current != null) {
+            if (Files.exists(current.resolve("pom.xml"))
+                    || Files.exists(current.resolve("build.gradle"))
+                    || Files.exists(current.resolve("build.gradle.kts"))) {
+                return current;
+            }
+            current = current.getParent();
+        }
+        return null;
     }
 }

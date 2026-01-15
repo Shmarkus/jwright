@@ -72,8 +72,12 @@ public class DebounceHandler {
 
     private void processFile(Path file) {
         pendingTasks.remove(file);
-        log.debug("File stabilized: {}", file);
-        onFileStabilized.accept(file);
+        log.debug("File stabilized after debounce: {}", file);
+        try {
+            onFileStabilized.accept(file);
+        } catch (Exception e) {
+            log.error("Error processing file {}: {}", file, e.getMessage(), e);
+        }
     }
 
     /**

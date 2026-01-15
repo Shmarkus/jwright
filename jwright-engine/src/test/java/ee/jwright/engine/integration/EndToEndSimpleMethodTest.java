@@ -17,6 +17,7 @@ import ee.jwright.core.extract.ExtractionRequest;
 import ee.jwright.engine.DefaultJwrightCore;
 import ee.jwright.engine.context.ContextBuilder;
 import ee.jwright.engine.pipeline.PipelineState;
+import ee.jwright.engine.resolve.BuildToolResolver;
 import ee.jwright.engine.task.ImplementTask;
 import ee.jwright.engine.template.MustacheResolver;
 import ee.jwright.engine.template.MustacheTemplateEngine;
@@ -263,7 +264,7 @@ class EndToEndSimpleMethodTest {
                 templateEngine,
                 mockLlm,
                 codeWriter,
-                mockBuildTool
+                createBuildToolResolver(mockBuildTool)
             );
 
             ImplementRequest request = new ImplementRequest(
@@ -304,7 +305,7 @@ class EndToEndSimpleMethodTest {
                 templateEngine,
                 mockLlm,
                 codeWriter,
-                mockBuildTool
+                createBuildToolResolver(mockBuildTool)
             );
 
             ImplementRequest request = new ImplementRequest(
@@ -420,5 +421,9 @@ class EndToEndSimpleMethodTest {
                 return new TestResult(true, 1, 0, List.of());
             }
         };
+    }
+
+    private BuildToolResolver createBuildToolResolver(BuildTool buildTool) {
+        return new BuildToolResolver(List.of(buildTool));
     }
 }

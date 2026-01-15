@@ -1,5 +1,6 @@
 package ee.jwright.cli;
 
+import ee.jwright.core.api.ImplementRequest;
 import ee.jwright.core.api.JwrightCore;
 import ee.jwright.core.api.LogLevel;
 import ee.jwright.core.api.PipelineResult;
@@ -88,7 +89,7 @@ public class WatchCommand implements Callable<Integer> {
     @Override
     public Integer call() {
         try {
-            Path absolutePath = projectDir.toAbsolutePath();
+            Path absolutePath = projectDir.toAbsolutePath().normalize();
 
             if (!quiet) {
                 System.out.println("Starting watch mode in: " + absolutePath);
@@ -112,8 +113,8 @@ public class WatchCommand implements Callable<Integer> {
                 logLevel
             );
 
-            // Create callback
-            WatchCallback callback = new ConsoleWatchCallback(quiet, verbose);
+            // Create callback that triggers implementation
+            WatchCallback callback = new ImplementingWatchCallback(quiet, verbose, absolutePath);
 
             // Start watching
             WatchHandle handle = core.watch(request, callback);
@@ -164,15 +165,17 @@ public class WatchCommand implements Callable<Integer> {
     }
 
     /**
-     * Console implementation of WatchCallback.
+     * Console implementation of WatchCallback that triggers implementation.
      */
-    private static class ConsoleWatchCallback implements WatchCallback {
+    private class ImplementingWatchCallback implements WatchCallback {
         private final boolean quiet;
         private final boolean verbose;
+        private final Path projectDir;
 
-        ConsoleWatchCallback(boolean quiet, boolean verbose) {
+        ImplementingWatchCallback(boolean quiet, boolean verbose, Path projectDir) {
             this.quiet = quiet;
             this.verbose = verbose;
+            this.projectDir = projectDir;
         }
 
         @Override
@@ -185,7 +188,22 @@ public class WatchCommand implements Callable<Integer> {
         @Override
         public void onTestDetected(String testTarget) {
             if (!quiet) {
-                System.out.println("Test detected: " + testTarget);
+                System.out.println("Failing test detected: " + testTarget);
+            }
+
+            // Trigger implementation generation
+            onGenerationStarted(testTarget);
+            try {
+                ImplementRequest request = new ImplementRequest(
+                    projectDir,
+                    testTarget,
+                    false,  // dryRun
+                    verbose ? LogLevel.DEBUG : (quiet ? LogLevel.QUIET : LogLevel.INFO)
+                );
+                PipelineResult result = core.implement(request);
+                onGenerationComplete(result);
+            } catch (JwrightException e) {
+                onError(e);
             }
         }
 

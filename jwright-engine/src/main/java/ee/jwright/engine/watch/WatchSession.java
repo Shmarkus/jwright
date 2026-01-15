@@ -50,7 +50,7 @@ public class WatchSession {
      * @throws IOException if unable to start watching
      */
     public WatchHandle start() throws IOException {
-        log.info("Starting watch session for: {}", request.projectDir());
+        log.debug("Starting watch session for: {}", request.projectDir());
 
         // Initialize components
         testChangeHandler = new TestChangeHandler(buildTool, callback);
@@ -71,7 +71,7 @@ public class WatchSession {
 
         fileWatcher.start();
 
-        log.info("Watch session started, monitoring: {}", watchDir);
+        log.debug("Watch session started, monitoring: {}", watchDir);
         return handle;
     }
 
@@ -102,6 +102,6 @@ public class WatchSession {
         if (handle != null) {
             handle.stop();
         }
-        log.info("Watch session stopped");
+        log.debug("Watch session stopped");
     }
 }

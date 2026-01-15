@@ -251,17 +251,19 @@ public class GradleBuildTool implements BuildTool {
      * @return the parsed test result
      */
     private TestResult parseTestResults(int exitCode) {
+        log.debug("Parsing test results, exit code: {}", exitCode);
         List<TestFailure> failures = new ArrayList<>();
         int totalTests = 0;
         int failedTests = 0;
 
         if (currentProjectDir == null) {
+            log.warn("No project directory set, cannot parse test results");
             return new TestResult(exitCode == 0, 0, 0, failures);
         }
 
         Path testResultsDir = currentProjectDir.resolve("build/test-results/test");
         if (!Files.isDirectory(testResultsDir)) {
-            log.debug("Test results directory not found: {}", testResultsDir);
+            log.warn("Test results directory not found: {}", testResultsDir);
             // If no test results but exit code is 0, assume success
             return new TestResult(exitCode == 0, exitCode == 0 ? 1 : 0, exitCode == 0 ? 0 : 1, failures);
         }
@@ -271,6 +273,7 @@ public class GradleBuildTool implements BuildTool {
             DocumentBuilder builder = factory.newDocumentBuilder();
 
             for (Path xmlFile : stream) {
+                log.debug("Parsing XML report: {}", xmlFile);
                 TestReportSummary summary = parseXmlReport(builder, xmlFile);
                 totalTests += summary.tests;
                 failedTests += summary.failures + summary.errors;
@@ -283,7 +286,7 @@ public class GradleBuildTool implements BuildTool {
         int passedTests = totalTests - failedTests;
         boolean success = failedTests == 0 && totalTests > 0;
 
-        log.debug("Test results: {} passed, {} failed (total {})", passedTests, failedTests, totalTests);
+        log.debug("Test results: {} passed, {} failed", passedTests, failedTests);
         return new TestResult(success, passedTests, failedTests, failures);
     }
 
@@ -311,6 +314,10 @@ public class GradleBuildTool implements BuildTool {
             for (int i = 0; i < testcases.getLength(); i++) {
                 Element testcase = (Element) testcases.item(i);
                 String testMethod = testcase.getAttribute("name");
+                // Strip trailing parentheses if present (JUnit XML includes them)
+                if (testMethod.endsWith("()")) {
+                    testMethod = testMethod.substring(0, testMethod.length() - 2);
+                }
                 String testClass = testcase.getAttribute("classname");
 
                 // Check for failure element
@@ -321,7 +328,6 @@ public class GradleBuildTool implements BuildTool {
                     String stackTrace = failure.getTextContent();
 
                     summary.testFailures.add(new TestFailure(testClass, testMethod, message, stackTrace));
-                    log.debug("Parsed test failure: {}#{} - {}", testClass, testMethod, message);
                 }
 
                 // Check for error element
@@ -332,13 +338,11 @@ public class GradleBuildTool implements BuildTool {
                     String stackTrace = error.getTextContent();
 
                     summary.testFailures.add(new TestFailure(testClass, testMethod, message, stackTrace));
-                    log.debug("Parsed test error: {}#{} - {}", testClass, testMethod, message);
                 }
             }
         } catch (Exception e) {
-            log.warn("Failed to parse XML report: {}", xmlFile, e);
+            log.error("Failed to parse XML report: {}", xmlFile, e);
         }
-
         return summary;
     }
 

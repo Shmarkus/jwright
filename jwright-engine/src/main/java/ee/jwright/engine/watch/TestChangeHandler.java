@@ -51,11 +51,15 @@ public class TestChangeHandler {
      * @param changedFile the file that changed
      */
     public void handleChange(Path changedFile) {
+        log.debug("Handling change for: {}", changedFile);
+
         // Check if it's a test file
         if (!testFileDetector.isTestFile(changedFile)) {
-            log.trace("Ignoring non-test file: {}", changedFile);
+            log.debug("Ignoring non-test file: {}", changedFile);
             return;
         }
+
+        log.debug("Processing test file: {}", changedFile);
 
         // Extract test class name
         String testClass = extractTestClassName(changedFile);
@@ -64,10 +68,11 @@ public class TestChangeHandler {
             return;
         }
 
-        log.debug("Processing test file: {} ({})", changedFile, testClass);
+        log.debug("Extracted test class: {}", testClass);
 
         // Find failing tests
         List<String> failingTests = failingTestFinder.findFailingTests(changedFile, testClass);
+        log.debug("Found {} failing tests", failingTests.size());
 
         // Report each failing test
         for (String failingTest : failingTests) {

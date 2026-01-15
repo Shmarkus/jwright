@@ -5,6 +5,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
@@ -15,6 +18,7 @@ import static java.nio.file.StandardWatchEventKinds.*;
  * Service that monitors a directory for file changes using Java's WatchService.
  * <p>
  * Wraps the low-level WatchService API and provides a simpler callback-based interface.
+ * Recursively watches all subdirectories.
  * </p>
  */
 public class FileWatcherService {
@@ -24,6 +28,7 @@ public class FileWatcherService {
     private final Path watchedDirectory;
     private final Consumer<Path> onFileChanged;
     private final ExecutorService executor;
+    private final Map<WatchKey, Path> keyToPath;
     private WatchService watchService;
     private volatile boolean running;
 
@@ -36,6 +41,7 @@ public class FileWatcherService {
     public FileWatcherService(Path watchedDirectory, Consumer<Path> onFileChanged) {
         this.watchedDirectory = watchedDirectory;
         this.onFileChanged = onFileChanged;
+        this.keyToPath = new HashMap<>();
         this.executor = Executors.newSingleThreadExecutor(r -> {
             Thread thread = new Thread(r, "file-watcher");
             thread.setDaemon(true);
@@ -45,7 +51,7 @@ public class FileWatcherService {
     }
 
     /**
-     * Starts watching the directory.
+     * Starts watching the directory and all subdirectories recursively.
      *
      * @throws IOException if unable to start watching
      */
@@ -55,11 +61,27 @@ public class FileWatcherService {
         }
 
         watchService = FileSystems.getDefault().newWatchService();
-        watchedDirectory.register(watchService, ENTRY_CREATE, ENTRY_MODIFY, ENTRY_DELETE);
+        registerRecursively(watchedDirectory);
         running = true;
 
         executor.submit(this::watchLoop);
-        log.debug("Started watching directory: {}", watchedDirectory);
+        log.debug("Started watching {} directories under {}", keyToPath.size(), watchedDirectory);
+    }
+
+    private void registerRecursively(Path start) throws IOException {
+        Files.walkFileTree(start, new SimpleFileVisitor<>() {
+            @Override
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                registerDirectory(dir);
+                return FileVisitResult.CONTINUE;
+            }
+        });
+    }
+
+    private void registerDirectory(Path dir) throws IOException {
+        WatchKey key = dir.register(watchService, ENTRY_CREATE, ENTRY_MODIFY, ENTRY_DELETE);
+        keyToPath.put(key, dir);
+        log.trace("Registered watch on: {}", dir);
     }
 
     /**
@@ -91,6 +113,12 @@ public class FileWatcherService {
                 break;
             }
 
+            Path dir = keyToPath.get(key);
+            if (dir == null) {
+                key.cancel();
+                continue;
+            }
+
             for (WatchEvent<?> event : key.pollEvents()) {
                 WatchEvent.Kind<?> kind = event.kind();
 
@@ -101,15 +129,28 @@ public class FileWatcherService {
                 @SuppressWarnings("unchecked")
                 WatchEvent<Path> pathEvent = (WatchEvent<Path>) event;
                 Path filename = pathEvent.context();
-                Path fullPath = watchedDirectory.resolve(filename);
+                Path fullPath = dir.resolve(filename);
 
-                log.trace("Detected change: {} in {}", kind.name(), fullPath);
+                log.debug("Detected change: {} in {}", kind.name(), fullPath);
+
+                // If a new directory is created, register it for watching
+                if (kind == ENTRY_CREATE && Files.isDirectory(fullPath)) {
+                    try {
+                        registerRecursively(fullPath);
+                    } catch (IOException e) {
+                        log.warn("Failed to register new directory: {}", fullPath, e);
+                    }
+                }
+
                 onFileChanged.accept(fullPath);
             }
 
             boolean valid = key.reset();
             if (!valid) {
-                break;
+                keyToPath.remove(key);
+                if (keyToPath.isEmpty()) {
+                    break;
+                }
             }
         }
     }
