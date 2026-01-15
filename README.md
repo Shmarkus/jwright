@@ -306,13 +306,10 @@ ollama serve
 ### Model not found
 
 ```
-Error: model 'qwen2.5-coder:14b' not found
+Error: model 'cogito:8b-8k' not found
 ```
 
-Pull the model:
-```bash
-ollama pull qwen2.5-coder:14b
-```
+Create the model (see [Setting Up cogito:8b-8k](#setting-up-cogito8b-8k-recommended) above).
 
 ### Compilation failures after generation
 
@@ -329,6 +326,11 @@ If generated code compiles but tests fail, jwright will retry with test failure 
 ## Contributing
 
 See [CLAUDE.md](CLAUDE.md) for development guidelines and architecture documentation.
+
+**Extending jwright:** See [EXTENDING.md](EXTENDING.md) for guides on adding:
+- New LLM providers (OpenAI, Claude, etc.)
+- New build tools (Bazel, etc.)
+- New language support (Kotlin, etc.)
 
 Key points:
 - Never modify STABLE interfaces in `jwright-core`
