@@ -31,6 +31,8 @@ mvn test -pl jwright-engine
 - `ContextBuilder`: Runs extractors, builds `ExtractionContext`
 - `BackupManager`: Snapshot/revert stack for file safety
 - `PipelineState`: Mutable runtime state during execution
+- `FileWatcherService`: Monitors file changes and triggers implementation
+- `TestChangeHandler`: Coordinates watch-to-implement workflow
 
 ---
 <!-- WARM CONTEXT ENDS ABOVE THIS LINE -->
@@ -48,9 +50,17 @@ ee.jwright.engine/
 │   └── BackupManager.java        # File backup/revert
 ├── context/
 │   └── ContextBuilder.java       # Extractor orchestration
-└── template/
-    ├── MustacheTemplateEngine.java   # Template implementation
-    └── MustacheResolver.java         # Template resolution
+├── template/
+│   ├── MustacheTemplateEngine.java   # Template implementation
+│   └── MustacheResolver.java         # Template resolution
+└── watch/
+    ├── FileWatcherService.java       # File system watch implementation
+    ├── DefaultWatchHandle.java       # Watch handle lifecycle
+    ├── WatchSession.java             # Active watch session state
+    ├── DebounceHandler.java          # File change debouncing
+    ├── TestFileDetector.java         # Identifies test file changes
+    ├── FailingTestFinder.java        # Locates failing tests
+    └── TestChangeHandler.java        # Orchestrates test->implement
 ```
 
 ### TaskPipeline
@@ -170,7 +180,142 @@ Templates resolved in order:
 | Required (`isRequired()=true`) | Retry up to max, then fail | No |
 | Optional (`isRequired()=false`) | Revert changes, mark REVERTED | Yes |
 
+## Watch Mode Architecture
+
+Watch mode provides continuous TDD by monitoring test files and automatically implementing new/modified tests.
+
+### FileWatcherService
+
+Core service implementing file system watching.
+
+```java
+@Service
+public class FileWatcherService {
+    public WatchHandle watch(WatchRequest request, WatchCallback callback);
+    // Uses Java NIO WatchService for efficient file monitoring
+}
+```
+
+**Responsibilities:**
+- Monitor configured paths for file changes
+- Filter events based on ignore patterns
+- Delegate to appropriate handlers
+
+### WatchSession
+
+Encapsulates the state of an active watch session.
+
+```java
+public class WatchSession {
+    private final WatchService watchService;
+    private final Map<WatchKey, Path> watchKeys;
+    private final AtomicBoolean running;
+
+    public void start();
+    public void stop();
+    public boolean isRunning();
+}
+```
+
+**Lifecycle:**
+1. Created when watch starts
+2. Registers watch keys for configured paths
+3. Polls for file events until stopped
+4. Cleans up resources on stop
+
+### DebounceHandler
+
+Prevents redundant processing when files change rapidly.
+
+```java
+public class DebounceHandler {
+    public void schedule(Path file, Runnable action);
+    // Delays action execution until changes settle
+}
+```
+
+**Behavior:**
+- Default debounce: 500ms (configurable)
+- Resets timer on each change to same file
+- Executes action only after quiet period
+
+### TestFileDetector
+
+Identifies whether a changed file is a test file.
+
+```java
+public class TestFileDetector {
+    public boolean isTestFile(Path file);
+    // Checks: ends with "Test.java", in test source path
+}
+```
+
+### FailingTestFinder
+
+Locates failing test methods in a test class.
+
+```java
+public class FailingTestFinder {
+    public List<String> findFailingTests(Path testFile);
+    // Runs tests, parses results, returns TestClass#method targets
+}
+```
+
+**Strategy:**
+1. Execute test class using BuildTool
+2. Parse test results
+3. Identify failed/errored tests
+4. Return fully qualified test targets
+
+### TestChangeHandler
+
+Orchestrates the watch-to-implement workflow.
+
+```java
+public class TestChangeHandler {
+    public void handleTestChange(Path testFile, WatchCallback callback);
+}
+```
+
+**Workflow:**
+1. Verify file is a test file
+2. Find failing tests in the file
+3. For each failing test:
+   - Notify callback of test detected
+   - Create ImplementRequest
+   - Execute pipeline
+   - Notify callback of result
+4. Handle errors gracefully
+
+### Watch Flow
+
+```
+File Change → Debounce → Test Detection → Find Failing Tests → Implement Each → Callback
+     ↓           ↓              ↓                  ↓                  ↓            ↓
+  NIO Watch   500ms wait   TestFileDetector  BuildTool+Parse   TaskPipeline  User feedback
+```
+
+### Error Handling
+
+Watch mode is designed for resilience:
+
+- **File system errors**: Logged, watch continues
+- **Test detection errors**: Callback notified, watch continues
+- **Implementation errors**: Callback notified with details, watch continues
+- **Unexpected errors**: Logged, attempt recovery
+
+### Integration with DefaultJwrightCore
+
+```java
+@Override
+public WatchHandle watch(WatchRequest request, WatchCallback callback) {
+    return fileWatcherService.watch(request, callback);
+}
+```
+
+Simple delegation to FileWatcherService maintains separation of concerns.
+
 ---
 
-**Last Updated:** 2025-01-14
-**Status:** Design complete
+**Last Updated:** 2025-01-15
+**Status:** Implemented and tested

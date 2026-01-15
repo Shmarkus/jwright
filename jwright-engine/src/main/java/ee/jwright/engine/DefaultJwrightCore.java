@@ -17,6 +17,7 @@ import ee.jwright.engine.context.ContextBuilder;
 import ee.jwright.engine.pipeline.BackupManager;
 import ee.jwright.engine.pipeline.TaskPipeline;
 import ee.jwright.engine.resolve.TestTargetResolver;
+import ee.jwright.engine.watch.WatchSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -211,10 +212,26 @@ public class DefaultJwrightCore implements JwrightCore {
 
     @Override
     public WatchHandle watch(WatchRequest request, WatchCallback callback) throws JwrightException {
-        // Watch functionality will be implemented in a later phase
-        throw new JwrightException(
-            JwrightException.ErrorCode.CONFIG_INVALID,
-            "Watch functionality not yet implemented"
-        );
+        log.info("Starting watch mode for: {}", request.projectDir());
+
+        // Validate build tool is available
+        if (buildTool == null) {
+            throw new JwrightException(
+                JwrightException.ErrorCode.CONFIG_INVALID,
+                "Build tool not configured. Cannot run watch mode."
+            );
+        }
+
+        // Create and start watch session
+        WatchSession session = new WatchSession(request, buildTool, callback);
+        try {
+            return session.start();
+        } catch (IOException e) {
+            throw new JwrightException(
+                JwrightException.ErrorCode.CONFIG_INVALID,
+                "Failed to start watch mode: " + e.getMessage(),
+                e
+            );
+        }
     }
 }

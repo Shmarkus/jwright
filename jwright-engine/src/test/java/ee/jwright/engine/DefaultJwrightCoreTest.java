@@ -1,9 +1,8 @@
 package ee.jwright.engine;
 
-import ee.jwright.core.api.ImplementRequest;
-import ee.jwright.core.api.InitResult;
-import ee.jwright.core.api.LogLevel;
-import ee.jwright.core.api.PipelineResult;
+import ee.jwright.core.api.*;
+import ee.jwright.core.build.BuildTool;
+import ee.jwright.core.build.TestResult;
 import ee.jwright.core.exception.JwrightException;
 import ee.jwright.core.extract.ExtractionContext;
 import ee.jwright.core.task.Task;
@@ -20,10 +19,14 @@ import org.junit.jupiter.api.io.TempDir;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Tests for {@link DefaultJwrightCore}.
@@ -195,6 +198,63 @@ class DefaultJwrightCoreTest {
 
             // Then
             assertThat(result.success()).isFalse();
+        }
+    }
+
+    @Nested
+    @DisplayName("3.20 watch")
+    class WatchTests {
+
+        @Test
+        @DisplayName("watch() returns a running watch handle")
+        void watchReturnsRunningHandle(@TempDir Path tempDir) throws JwrightException {
+            // Given
+            BuildTool buildTool = mock(BuildTool.class);
+            when(buildTool.runTests(anyString())).thenReturn(
+                new TestResult(true, 1, 0, List.of())
+            );
+
+            DefaultJwrightCore core = new DefaultJwrightCore(
+                new ContextBuilder(Collections.emptyList()),
+                Collections.emptyList(),
+                5,
+                null,
+                null,
+                null,
+                buildTool
+            );
+
+            WatchRequest request = new WatchRequest(
+                tempDir,
+                List.of(tempDir),
+                List.of(),
+                Duration.ofMillis(100),
+                LogLevel.INFO
+            );
+
+            WatchCallback callback = new WatchCallback() {
+                @Override
+                public void onFileChanged(Path file) {}
+                @Override
+                public void onTestDetected(String testTarget) {}
+                @Override
+                public void onGenerationStarted(String testTarget) {}
+                @Override
+                public void onGenerationComplete(PipelineResult result) {}
+                @Override
+                public void onError(JwrightException error) {}
+            };
+
+            // When
+            WatchHandle handle = core.watch(request, callback);
+
+            // Then
+            assertThat(handle.isRunning()).isTrue();
+            assertThat(handle.getWatchedDirectory()).isEqualTo(tempDir);
+
+            // Cleanup
+            handle.stop();
+            assertThat(handle.isRunning()).isFalse();
         }
     }
 }

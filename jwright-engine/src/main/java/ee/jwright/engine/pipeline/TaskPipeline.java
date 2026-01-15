@@ -115,7 +115,8 @@ public class TaskPipeline {
             templateEngine,
             llmClient,
             codeWriter,
-            buildTool
+            buildTool,
+            request.dryRun()
         );
 
         List<TaskResult> results = new ArrayList<>();

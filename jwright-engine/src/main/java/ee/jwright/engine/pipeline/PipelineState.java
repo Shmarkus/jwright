@@ -39,6 +39,7 @@ public class PipelineState {
     private final LlmClient llmClient;
     private final CodeWriter codeWriter;
     private final BuildTool buildTool;
+    private final boolean dryRun;
 
     /**
      * Creates a new pipeline state with the specified maximum retries.
@@ -46,7 +47,7 @@ public class PipelineState {
      * @param maxRetries the maximum number of retry attempts (0 means no retries)
      */
     public PipelineState(int maxRetries) {
-        this(maxRetries, null, null, null, null, null, null);
+        this(maxRetries, null, null, null, null, null, null, false);
     }
 
     /**
@@ -63,6 +64,24 @@ public class PipelineState {
     public PipelineState(int maxRetries, Path projectDir, Path implFile,
                          TemplateEngine templateEngine, LlmClient llmClient,
                          CodeWriter codeWriter, BuildTool buildTool) {
+        this(maxRetries, projectDir, implFile, templateEngine, llmClient, codeWriter, buildTool, false);
+    }
+
+    /**
+     * Creates a new pipeline state with all request-scoped dependencies including dry-run flag.
+     *
+     * @param maxRetries     the maximum number of retry attempts
+     * @param projectDir     the project directory
+     * @param implFile       the implementation file to write to
+     * @param templateEngine the template engine
+     * @param llmClient      the LLM client
+     * @param codeWriter     the code writer
+     * @param buildTool      the build tool
+     * @param dryRun         if true, skip file writes and validation
+     */
+    public PipelineState(int maxRetries, Path projectDir, Path implFile,
+                         TemplateEngine templateEngine, LlmClient llmClient,
+                         CodeWriter codeWriter, BuildTool buildTool, boolean dryRun) {
         this.attemptNumber = 1;
         this.maxRetries = maxRetries;
         this.failedAttempts = new ArrayList<>();
@@ -72,6 +91,7 @@ public class PipelineState {
         this.llmClient = llmClient;
         this.codeWriter = codeWriter;
         this.buildTool = buildTool;
+        this.dryRun = dryRun;
     }
 
     /**
@@ -245,5 +265,14 @@ public class PipelineState {
      */
     public BuildTool getBuildTool() {
         return buildTool;
+    }
+
+    /**
+     * Returns whether dry-run mode is enabled.
+     *
+     * @return true if dry-run mode is enabled
+     */
+    public boolean isDryRun() {
+        return dryRun;
     }
 }

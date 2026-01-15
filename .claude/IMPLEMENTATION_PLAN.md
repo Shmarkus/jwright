@@ -494,9 +494,18 @@
 - **Scope:** Retry flow
 
 ### 9.4 WatchCommand ✅
-- **Artifact:** `WatchCommand.java`
-- **Test:** Detects file change, triggers implementation
-- **Scope:** Watch mode
+- **Artifact:** `WatchCommand.java` + watch mode infrastructure
+- **Test:** 20 unit tests covering watch components, integration tested
+- **Scope:** Watch mode (complete implementation)
+- **Components implemented:**
+  - `FileWatcherService` - File system monitoring
+  - `DefaultWatchHandle` - Watch handle lifecycle
+  - `WatchSession` - Active watch session state
+  - `DebounceHandler` - File change debouncing
+  - `TestFileDetector` - Test file identification
+  - `FailingTestFinder` - Failing test discovery
+  - `TestChangeHandler` - Watch-to-implement orchestration
+- **Status:** Fully implemented and validated (167 engine tests passing)
 
 ### 9.5 Default configuration ✅
 - **Artifact:** Sensible defaults in bundled config

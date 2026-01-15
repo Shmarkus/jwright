@@ -103,15 +103,27 @@ jwright watch [options]
 
 | Option | Description | Default |
 |--------|-------------|---------|
+| `--dir <path>` | Project directory | Current directory |
 | `--verbose` | Show details | false |
 | `--quiet` | Minimal output | false |
 
 **Behavior:**
-1. Watches paths defined in `config.yaml`
-2. Detects new/modified test files
-3. Finds failing tests
-4. Runs implementation pipeline
-5. Reports results
+1. Watches paths defined in `config.yaml` (default: `src/test/java`)
+2. Detects new/modified test files (debounced to 500ms)
+3. Finds failing tests in changed files
+4. Runs implementation pipeline for each failing test
+5. Reports results in real-time
+6. Continues watching until interrupted (Ctrl+C)
+
+**Example Output:**
+```
+[WATCH] Monitoring: src/test/java
+[WATCH] Detected change: src/test/java/com/example/CalculatorTest.java
+[WATCH] Found failing test: CalculatorTest#add_returnsSumOfTwoNumbers
+[IMPLEMENT] Generating implementation...
+[SUCCESS] Implementation completed in 2.3s
+[WATCH] Waiting for changes...
+```
 
 #### Global Options
 
@@ -204,36 +216,66 @@ public class ImplementCommand implements Runnable {
 
 #### WatchCommand
 
+Implemented and functional. Monitors test files and automatically triggers implementation.
+
 ```java
 @Command(name = "watch")
 public class WatchCommand implements Runnable {
 
+    @Option(names = {"-d", "--directory"})
+    private Path directory = Path.of(".");
+
+    @Option(names = "--verbose")
+    private boolean verbose;
+
     @Override
     public void run() {
-        WatchRequest request = buildFromConfig();
+        WatchRequest request = WatchRequest.builder()
+            .projectRoot(directory)
+            .logLevel(verbose ? LogLevel.DEBUG : LogLevel.INFO)
+            .build();
 
         WatchHandle handle = core.watch(request, new WatchCallback() {
             @Override
             public void onTestDetected(String target) {
-                System.out.println("Detected: " + target);
+                System.out.println("[WATCH] Found failing test: " + target);
             }
 
             @Override
-            public void onGenerationComplete(PipelineResult result) {
-                // Print result summary
+            public void onImplementationComplete(PipelineResult result) {
+                if (result.success()) {
+                    System.out.println("[SUCCESS] Implementation completed");
+                } else {
+                    System.err.println("[FAILED] " + result.message());
+                }
             }
 
             @Override
             public void onError(JwrightException error) {
-                System.err.println("Error: " + error.getMessage());
+                System.err.println("[ERROR] " + error.getMessage());
             }
         });
 
+        System.out.println("[WATCH] Monitoring: " + request.watchPaths());
+        System.out.println("[WATCH] Press Ctrl+C to stop");
+
         // Block until interrupted
         Runtime.getRuntime().addShutdownHook(new Thread(handle::stop));
+
+        // Keep main thread alive
+        while (handle.isRunning()) {
+            Thread.sleep(1000);
+        }
     }
 }
 ```
+
+**Features:**
+- Real-time file system monitoring
+- Debounced change detection (prevents duplicate processing)
+- Automatic failing test discovery
+- Clean shutdown on Ctrl+C
+- Configurable watch paths and ignore patterns
 
 ### Output Formatting
 
@@ -270,5 +312,5 @@ public int calculateTotal() {
 
 ---
 
-**Last Updated:** 2025-01-14
-**Status:** Design complete
+**Last Updated:** 2025-01-15
+**Status:** Fully implemented and tested

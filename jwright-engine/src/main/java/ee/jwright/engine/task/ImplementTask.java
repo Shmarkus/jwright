@@ -123,6 +123,12 @@ public class ImplementTask implements Task {
             // 5. Store in state
             state.setGeneratedCode(generatedCode);
 
+            // If dry-run, skip file write and validation
+            if (state.isDryRun()) {
+                log.info("Dry-run mode: skipping file write and validation");
+                return new TaskResult(getId(), TaskStatus.SUCCESS, "Code generated (dry-run)", attempt);
+            }
+
             // 6. Write to file
             WriteRequest writeRequest = new WriteRequest(
                 implFile,

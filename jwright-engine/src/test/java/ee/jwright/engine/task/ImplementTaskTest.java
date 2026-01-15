@@ -274,6 +274,64 @@ class ImplementTaskTest {
     }
 
     @Nested
+    @DisplayName("7.3.1 dry-run mode")
+    class DryRunTests {
+
+        @Test
+        @DisplayName("execute() skips file write when dry-run is enabled")
+        void executeSkipsFileWriteInDryRun() throws LlmException {
+            // Given
+            ExtractionContext context = createMinimalContext();
+            PipelineState dryRunState = new PipelineState(3, projectDir, implFile, templateEngine, llmClient, codeWriter, buildTool, true);
+
+            when(templateEngine.render(anyString(), any())).thenReturn("prompt");
+            when(llmClient.generate(anyString())).thenReturn("return a + b;");
+
+            // When
+            TaskResult result = task.execute(context, dryRunState);
+
+            // Then
+            verify(codeWriter, never()).write(any());
+            assertThat(result.status()).isEqualTo(TaskStatus.SUCCESS);
+        }
+
+        @Test
+        @DisplayName("execute() stores generated code in state even in dry-run mode")
+        void executeStoresGeneratedCodeInDryRun() throws LlmException {
+            // Given
+            ExtractionContext context = createMinimalContext();
+            PipelineState dryRunState = new PipelineState(3, projectDir, implFile, templateEngine, llmClient, codeWriter, buildTool, true);
+
+            when(templateEngine.render(anyString(), any())).thenReturn("prompt");
+            when(llmClient.generate(anyString())).thenReturn("return a + b;");
+
+            // When
+            task.execute(context, dryRunState);
+
+            // Then
+            assertThat(dryRunState.getGeneratedCode()).isEqualTo("return a + b;");
+        }
+
+        @Test
+        @DisplayName("execute() skips compilation and test in dry-run mode")
+        void executeSkipsValidationInDryRun() throws LlmException {
+            // Given
+            ExtractionContext context = createMinimalContext();
+            PipelineState dryRunState = new PipelineState(3, projectDir, implFile, templateEngine, llmClient, codeWriter, buildTool, true);
+
+            when(templateEngine.render(anyString(), any())).thenReturn("prompt");
+            when(llmClient.generate(anyString())).thenReturn("return a + b;");
+
+            // When
+            task.execute(context, dryRunState);
+
+            // Then
+            verify(buildTool, never()).compile(any());
+            verify(buildTool, never()).runSingleTest(anyString(), anyString());
+        }
+    }
+
+    @Nested
     @DisplayName("7.4 test validation")
     class TestValidationTests {
 
