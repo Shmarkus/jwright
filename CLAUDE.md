@@ -8,7 +8,23 @@ jwright is an AI-assisted Test-Driven Development (TDD) tool using local languag
 
 **Core Principle:** "Don't make the model use tools. Make tools wrap the model."
 
-**Status:** Implementation complete (88/88 tasks).
+**Status:** v1.1.1 - Implementation complete (88/88 tasks).
+
+## Quick Usage
+
+```bash
+# Build
+mvn clean install
+
+# Use wrapper script (handles JAR discovery)
+./jwright init                                    # Initialize project
+./jwright implement "TestClass#method"            # Simple class name (auto-finds package)
+./jwright implement "com.example.TestClass#method" # Or fully qualified
+./jwright watch                                   # Continuous TDD mode
+
+# Add to PATH for global access
+ln -s "$(pwd)/jwright" ~/.local/bin/jwright
+```
 
 ## Build Commands
 
@@ -25,6 +41,20 @@ mvn test -Dtest=TestClassName#testMethodName
 # Skip tests during install
 mvn clean install -DskipTests
 ```
+
+## Recommended Model
+
+Default model is `cogito:8b-8k` (best performer in benchmarks - 12/12 tests).
+
+```bash
+# Create 8k context version
+ollama run cogito:8b
+/set parameter num_ctx 8192
+/save cogito:8b-8k
+# Ctrl+D to exit
+```
+
+See [MODEL_BENCHMARKS.md](MODEL_BENCHMARKS.md) for full comparison of 11 models.
 
 ## Architecture
 
@@ -135,3 +165,12 @@ See [.claude/IMPLEMENTATION_PLAN.md](.claude/IMPLEMENTATION_PLAN.md) for the com
 - **Phase 9:** Integration & Polish (6 tasks) ✓
 
 **Total:** 88/88 tasks complete.
+
+## Key Files
+
+| File | Purpose |
+|------|---------|
+| `jwright` | Wrapper script for CLI (symlink-safe) |
+| `MODEL_BENCHMARKS.md` | LLM model performance comparison |
+| `.jwright/config.yaml` | Project configuration (created by `init`) |
+| `jwright-engine/.../TestTargetResolver.java` | Resolves test class names (supports simple names) |
