@@ -125,6 +125,11 @@ class DefaultJwrightCoreTest {
             Files.createDirectories(implFile.getParent());
             Files.writeString(implFile, "public class Impl {}");
 
+            // Create test file for TestTargetResolver
+            Path testFile = tempDir.resolve("src/test/java/Test.java");
+            Files.createDirectories(testFile.getParent());
+            Files.writeString(testFile, "class Test {}");
+
             // Create a simple task that succeeds
             Task successTask = new Task() {
                 @Override
@@ -167,6 +172,11 @@ class DefaultJwrightCoreTest {
             Path implFile = tempDir.resolve("src/main/java/Impl.java");
             Files.createDirectories(implFile.getParent());
             Files.writeString(implFile, "public class Impl {}");
+
+            // Create test file for TestTargetResolver
+            Path testFile = tempDir.resolve("src/test/java/Test.java");
+            Files.createDirectories(testFile.getParent());
+            Files.writeString(testFile, "class Test {}");
 
             Task failingTask = new Task() {
                 @Override

@@ -47,6 +47,11 @@ class TaskPipelineTest {
         Files.createDirectories(implFile.getParent());
         Files.writeString(implFile, "public class Impl {}");
 
+        // Create a sample test file (required for TestTargetResolver)
+        Path testFile = tempDir.resolve("src/test/java/Test.java");
+        Files.createDirectories(testFile.getParent());
+        Files.writeString(testFile, "class Test {}");
+
         sampleRequest = new ImplementRequest(tempDir, "Test#testMethod", false, LogLevel.INFO);
     }
 

@@ -33,6 +33,7 @@ mvn test -pl jwright-engine
 - `PipelineState`: Mutable runtime state during execution
 - `FileWatcherService`: Monitors file changes and triggers implementation
 - `TestChangeHandler`: Coordinates watch-to-implement workflow
+- `TestTargetResolver`: Resolves test targets (supports simple and fully qualified class names)
 
 ---
 <!-- WARM CONTEXT ENDS ABOVE THIS LINE -->
@@ -50,6 +51,8 @@ ee.jwright.engine/
 │   └── BackupManager.java        # File backup/revert
 ├── context/
 │   └── ContextBuilder.java       # Extractor orchestration
+├── resolve/
+│   └── TestTargetResolver.java   # Test target resolution (simple & qualified names)
 ├── template/
 │   ├── MustacheTemplateEngine.java   # Template implementation
 │   └── MustacheResolver.java         # Template resolution
@@ -317,5 +320,48 @@ Simple delegation to FileWatcherService maintains separation of concerns.
 
 ---
 
-**Last Updated:** 2025-01-15
+## Test Target Resolution
+
+### TestTargetResolver
+
+Resolves test targets from command-line arguments to file paths and class names.
+
+```java
+public class TestTargetResolver {
+    public ResolvedTarget resolve(Path projectDir, String target) throws JwrightException;
+}
+```
+
+**Target Format:**
+- `ClassName#methodName` - Simple class name, searches `src/test/java/**/<ClassName>.java`
+- `com.example.ClassName#methodName` - Fully qualified, uses exact path
+
+**Resolution Behavior:**
+
+| Input | Action | Example |
+|-------|--------|---------|
+| Simple name | Search recursively | `CalculatorTest#testAdd` -> finds `src/test/java/com/example/CalculatorTest.java` |
+| Fully qualified | Use exact path | `com.example.CalculatorTest#testAdd` -> `src/test/java/com/example/CalculatorTest.java` |
+
+**Error Cases:**
+- **No matches**: `NO_TEST_FOUND` error with class name
+- **Multiple matches**: `CONFIG_INVALID` error listing all locations
+- **Missing #**: `CONFIG_INVALID` error with format hint
+
+**Example:**
+```java
+TestTargetResolver resolver = new TestTargetResolver();
+
+// Simple class name - searches for file
+ResolvedTarget target = resolver.resolve(projectDir, "CalculatorTest#testAdd");
+// Returns: testFile=/project/src/test/java/com/example/CalculatorTest.java
+
+// Fully qualified - uses exact path (file doesn't need to exist)
+ResolvedTarget target = resolver.resolve(projectDir, "com.example.CalculatorTest#testAdd");
+// Returns: testFile=/project/src/test/java/com/example/CalculatorTest.java
+```
+
+---
+
+**Last Updated:** 2026-01-15
 **Status:** Implemented and tested
