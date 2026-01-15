@@ -99,8 +99,12 @@ void add_returnsSumOfTwoNumbers() {
 ### 3. Generate the implementation
 
 ```bash
-jwright implement "com.example.CalculatorTest#add_returnsSumOfTwoNumbers"
+jwright implement "CalculatorTest#add_returnsSumOfTwoNumbers"
 ```
+
+You can use either simple class names or fully qualified names:
+- `CalculatorTest#method` - jwright searches for the test file automatically
+- `com.example.CalculatorTest#method` - uses exact package path
 
 jwright will:
 1. Parse your test to understand what's expected
@@ -159,7 +163,7 @@ Options:
 
 Example:
 ```bash
-jwright implement "org.example.GameTest#addPlayer_addsPlayer" -d ~/projects/my-game
+jwright implement "GameTest#addPlayer_addsPlayer" -d ~/projects/my-game
 ```
 
 ### `jwright watch`
