@@ -21,7 +21,7 @@ curl http://localhost:11434/api/tags
 
 # Test generation
 curl http://localhost:11434/api/generate -d '{
-  "model": "qwen2.5-coder:14b",
+  "model": "cogito:8b-8k",
   "prompt": "Hello",
   "stream": false
 }'
@@ -79,7 +79,7 @@ public class OllamaClient implements LlmClient {
 @ConfigurationProperties(prefix = "jwright.llm.ollama")
 public class OllamaConfig {
     private String url = "http://localhost:11434";
-    private String model = "qwen2.5-coder:14b";
+    private String model = "cogito:8b-8k";
     private Duration timeout = Duration.ofSeconds(120);
 }
 ```
@@ -141,7 +141,7 @@ jwright:
 
     ollama:
       url: http://localhost:11434
-      model: qwen2.5-coder:14b
+      model: cogito:8b-8k
       timeout: 120s
 
     claude:
@@ -203,7 +203,7 @@ public class OpenAiClient implements LlmClient {
 
 | Provider | Model | Context | Use Case |
 |----------|-------|---------|----------|
-| Ollama | `qwen2.5-coder:14b` | 32k | Default, local |
+| Ollama | `cogito:8b-8k` | 32k | Default, local |
 | Ollama | `codellama:13b` | 16k | Alternative |
 | Claude | `claude-sonnet-4-20250514` | 200k | Cloud, larger context |
 | OpenAI | `gpt-4-turbo` | 128k | Cloud, alternative |

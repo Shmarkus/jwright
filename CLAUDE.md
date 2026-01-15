@@ -172,5 +172,6 @@ See [.claude/IMPLEMENTATION_PLAN.md](.claude/IMPLEMENTATION_PLAN.md) for the com
 |------|---------|
 | `jwright` | Wrapper script for CLI (symlink-safe) |
 | `MODEL_BENCHMARKS.md` | LLM model performance comparison |
+| `EXTENDING.md` | Guide for adding LLM providers, build tools, languages |
 | `.jwright/config.yaml` | Project configuration (created by `init`) |
 | `jwright-engine/.../TestTargetResolver.java` | Resolves test class names (supports simple names) |
